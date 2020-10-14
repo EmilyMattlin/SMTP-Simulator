@@ -1,5 +1,9 @@
 from socket import *
 import time
+import httplib
+import json
+
+#https://docs.python.org/3/library/http.client.html 
 
 msg1 = "\r\n I love computer networks!"
 msg2 = "\r\n We love Christine!"
@@ -64,6 +68,47 @@ for msg in msg_list:
     recv5 = clientSocket.recv(1024).decode()
     print recv5
 
+
+conn = httplib.HTTPConnection("SERVERHOSTNAME", 12001) # what is the hostname? localhost?
+conn.request("GET", "/emailstorage.json") # placeholder file name
+'''
+{
+    "emails": [
+        {
+        "rcpt_to": "EMAIL ADDRESS",
+        "mail_from": "EMAIL ADDRESS",
+        "message": "email contents",
+        "id": "0"
+        },
+        {
+        "rcpt_to": "EMAIL ADDRESS",
+        "mail_from": "EMAIL ADDRESS",
+        "message": "email contents",
+        "id": "1"
+        },
+        {
+        "rcpt_to": "EMAIL ADDRESS",
+        "mail_from": "EMAIL ADDRESS",
+        "message": "email contents",
+        "id": "2"
+        }
+    ]
+}
+'''
+r1 = conn.getresponse()
+data1 = r1.read()
+mail_dict = json.loads(data1)
+for i in data1['emails']: 
+    print(i) //prints emails
+r1.close()
+
+'''
+output:
+{'rcpt_to': 'EMAIL ADDRESS', 'mail_from': 'EMAIL ADDRESS', 'message': 'email contents', 'id': '0'}
+{'rcpt_to': 'EMAIL ADDRESS', 'mail_from': 'EMAIL ADDRESS', 'message': 'email contents', 'id': '1'}
+{'rcpt_to': 'EMAIL ADDRESS', 'mail_from': 'EMAIL ADDRESS', 'message': 'email contents', 'id': '2'}
+
+'''
 # Send QUIT command and get server response.
 print "send QUIT"
 quitCommand = 'QUIT\r\n'
