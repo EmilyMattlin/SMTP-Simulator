@@ -1,11 +1,15 @@
 from socket import *
+import time
 
-msg = "\r\n I love computer networks!"
+msg1 = "\r\n I love computer networks!"
+msg2 = "\r\n We love Christine!"
+msg3 = "\r\n Hello World"
+msg_list = [msg1, msg2, msg3]
 endmsg = "\r\n.\r\n"
 
 # Choose a mail server (e.g. Google mail server) and call it mailserver
 mailserver = "127.0.0.1"
-port = 12000
+port = 12001
 
 # Create socket called clientSocket and establish a TCP connection with mailserver
 clientSocket = socket(AF_INET, SOCK_STREAM)
@@ -45,15 +49,20 @@ clientSocket.send(dataCommand.encode())
 recv4 = clientSocket.recv(1024).decode()
 print recv4
 
-# Send message data.
-print "send msg"
-clientSocket.send(msg)
+# Send multiple emails at once
+for msg in msg_list:
+    # Send message data.
+    print "send msg"
+    clientSocket.send(msg)
 
-# Message ends with a single period.
-print "send endmsg"
-clientSocket.send(endmsg)
-recv5 = clientSocket.recv(1024).decode()
-print recv5
+    # prevent msg + endmsg from being combined into 1 req
+    time.sleep(1)
+
+    # Message ends with a single period.
+    print "send endmsg"
+    clientSocket.send(endmsg)
+    recv5 = clientSocket.recv(1024).decode()
+    print recv5
 
 # Send QUIT command and get server response.
 print "send QUIT"
