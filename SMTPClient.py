@@ -77,7 +77,7 @@ recv6 = clientSocket.recv(1024).decode()
 print recv6
 
 
-conn = httplib.HTTPConnection("SERVERHOSTNAME", 12001) # what is the hostname? localhost?
+conn = httplib.HTTPConnection("localhost", 12001) 
 conn.request("GET", "/emailstorage.json") # placeholder file name
 '''
 {
