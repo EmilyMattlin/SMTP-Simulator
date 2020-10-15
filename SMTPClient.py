@@ -104,11 +104,12 @@ conn.request("GET", "/emailstorage.json") # placeholder file name
 }
 '''
 r1 = conn.getresponse()
+conn.close()
 data1 = r1.read()
+r1.close()
 mail_dict = json.loads(data1)
 for i in data1['emails']: 
     print(i) //prints emails
-r1.close()
 
 '''
 output:
