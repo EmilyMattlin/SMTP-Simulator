@@ -69,6 +69,14 @@ for msg in msg_list:
     print recv5
 
 
+# Send QUIT command and get server response.
+print "send QUIT"
+quitCommand = 'QUIT\r\n'
+clientSocket.send(quitCommand)
+recv6 = clientSocket.recv(1024).decode()
+print recv6
+
+
 conn = httplib.HTTPConnection("SERVERHOSTNAME", 12001) # what is the hostname? localhost?
 conn.request("GET", "/emailstorage.json") # placeholder file name
 '''
@@ -107,11 +115,4 @@ output:
 {'rcpt_to': 'EMAIL ADDRESS', 'mail_from': 'EMAIL ADDRESS', 'message': 'email contents', 'id': '0'}
 {'rcpt_to': 'EMAIL ADDRESS', 'mail_from': 'EMAIL ADDRESS', 'message': 'email contents', 'id': '1'}
 {'rcpt_to': 'EMAIL ADDRESS', 'mail_from': 'EMAIL ADDRESS', 'message': 'email contents', 'id': '2'}
-
 '''
-# Send QUIT command and get server response.
-print "send QUIT"
-quitCommand = 'QUIT\r\n'
-clientSocket.send(quitCommand)
-recv6 = clientSocket.recv(1024).decode()
-print recv6
