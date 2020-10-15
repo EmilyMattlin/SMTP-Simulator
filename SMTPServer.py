@@ -1,5 +1,7 @@
 from socket import *
 import json
+import ssl
+import pprint
 
 # Create a TCP server socket
 serverSocket = socket(AF_INET, SOCK_STREAM)
@@ -16,51 +18,64 @@ counter = 0
 
 # Set up a new connection from the client
 connectionSocket, addr = serverSocket.accept()
-    
-connectionSocket.send('220')
+
+# Establish secure connection using TLS
+secure_sock = ssl.wrap_socket(connectionSocket, server_side=True, ca_certs = "client.pem", certfile="server.pem", keyfile="server.key", cert_reqs=ssl.CERT_REQUIRED,
+                           ssl_version=ssl.PROTOCOL_TLSv1_2)
+
+print repr(secure_sock.getpeername())
+print secure_sock.cipher()
+print pprint.pformat(secure_sock.getpeercert())
+cert = secure_sock.getpeercert()
+print cert                        
+
+# verify client
+if not cert or ('organizationName', 'Wellesley') not in cert['subject'][3]: raise Exception("ERROR")
+
+secure_sock.send('220')
 # receive HELO
-helo = connectionSocket.recv(1024)
+helo = secure_sock.recv(1024)
 print("Expected HELO, received: " + helo)
 # for now, assume commands are correct
-connectionSocket.send('250')
+secure_sock.send('250')
 
 # receive MAIL FROM
-mail_from = connectionSocket.recv(1024)
+mail_from = secure_sock.recv(1024)
 mail_from_addr = mail_from.split("<")[1].split(">")[0]
 print("Expected MAIL FROM, received:" + mail_from)
 print("mail from address: " + mail_from_addr)
-connectionSocket.send('250')
+secure_sock.send('250')
 
 # receive RCPT TO
-rcpt_to = connectionSocket.recv(1024)
+rcpt_to = secure_sock.recv(1024)
 rcpt_to_addr = rcpt_to.split("<")[1].split(">")[0]
 print("Expected RCPT TO, received:" + rcpt_to)
 print("rcpt to address: " + rcpt_to_addr)
-connectionSocket.send('250')
+secure_sock.send('250')
 
 # receive DATA command
-data_command = connectionSocket.recv(1024)
+data_command = secure_sock.recv(1024)
 print("expected DATA, received: ", data_command)
-connectionSocket.send('250')
+secure_sock.send('250')
 
 messages = {}
 while 1:
     # receive msg
-    msg = connectionSocket.recv(1024)
+    msg = secure_sock.recv(1024)
     if 'QUIT' in msg:
         print("expected QUIT, received: ", quit)
-        connectionSocket.send('250')
+        secure_sock.send('250')
         break
     print("expected msg, received: ", msg)
     messages[counter] = msg
     counter = counter + 1
 
     # receive endmsg
-    end_msg = connectionSocket.recv(1024)
+    end_msg = secure_sock.recv(1024)
     print("expected endmsg, received: ", end_msg)
-    connectionSocket.send('250')
+    secure_sock.send('250')
 
-connectionSocket.close()
+secure_sock.close()
 
 # save the email into data
 data["mail_from"] = mail_from_addr
