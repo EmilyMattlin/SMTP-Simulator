@@ -6,6 +6,8 @@ import ssl
 
 #https://docs.python.org/3/library/http.client.html 
 
+# MAKE INTO USER INPUT
+# IF YOU TYPE A MESSAGE, APPEND TO MSG_LIST and send to server, if quit, quit server connection and pull emails
 msg1 = "\r\n I love computer networks!"
 msg2 = "\r\n We love Christine!"
 msg3 = "\r\n Hello World"
@@ -97,8 +99,8 @@ recv6 = secure_sock.recv(1024).decode()
 print recv6
 
 # Pull protocol
-conn = httplib.HTTPConnection("localhost", 12001) 
-conn.request("GET", "/emailstorage.json") # placeholder file name
+conn = httplib.HTTPSConnection("localhost", 12001) 
+conn.request("GET", "/emailstorage.txt") 
 '''
 {
     "emails": [
@@ -129,7 +131,7 @@ data1 = r1.read()
 r1.close()
 mail_dict = json.loads(data1)
 for i in data1['emails']: 
-    print(i) //prints emails
+    print(i) #prints emails
 
 '''
 output:

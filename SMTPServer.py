@@ -12,9 +12,6 @@ serverSocket.listen(1)
 
 print('The server is ready to receive')
 
-# create json file for data storage
-data = {}
-counter = 0
 
 # Set up a new connection from the client
 connectionSocket, addr = serverSocket.accept()
@@ -58,8 +55,14 @@ data_command = secure_sock.recv(1024)
 print("expected DATA, received: ", data_command)
 secure_sock.send('250')
 
+# for json file for data storage
+data = {}
+counter = 0
+
 messages = {}
-while 1:
+server_alive = true
+
+while server_alive:
     # receive msg
     msg = secure_sock.recv(1024)
     if 'QUIT' in msg:
@@ -77,14 +80,20 @@ while 1:
 
 secure_sock.close()
 
+
 # save the email into data
-data["mail_from"] = mail_from_addr
-data["rcpt_to"] = rcpt_to_addr
-data['messages'] = messages
+for key in messages:
+    data[‘emails’] = []
+    data[emails].append({
+        ‘mail_from’: mail_from_addr,
+        ‘rct_to’: rcpt_to_addr,
+        ‘message’ : messages[key],
+        ‘ID’ : key
+    })
 
-json_data = json.dumps(data)
-print(json_data)
-
+with open('emailstorage.txt', 'w') as outfile:
+    json.dump(data, outfile)
+    
 # Client's Order of SMTP Operations:
 # HELO
 # MAIL FROM
@@ -98,14 +107,27 @@ print(json_data)
 # end_msg
 # QUIT
 
-# Expected JSON:
-# 
-# {
-#     "rcpt_to": "fake.email@gmail.com", 
-#     "mail_from": "fake.email@gmail.com", 
-#     "messages": {
-#         "0": "\r\n I love computer networks!", 
-#         "1": "\r\n We love Christine!", 
-#         "2": "\r\n Hello World"
-#         }
-# }
+'''
+{
+    "emails": [
+        {
+        "rcpt_to": "EMAIL ADDRESS",
+        "mail_from": "EMAIL ADDRESS",
+        "message": "email contents",
+        "id": "0"
+        },
+        {
+        "rcpt_to": "EMAIL ADDRESS",
+        "mail_from": "EMAIL ADDRESS",
+        "message": "email contents",
+        "id": "1"
+        },
+        {
+        "rcpt_to": "EMAIL ADDRESS",
+        "mail_from": "EMAIL ADDRESS",
+        "message": "email contents",
+        "id": "2"
+        }
+    ]
+}
+'''
