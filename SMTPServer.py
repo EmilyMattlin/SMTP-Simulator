@@ -2,11 +2,12 @@ from socket import *
 import json
 import ssl
 import pprint
+import httplib
 
 # Create a TCP server socket
 serverSocket = socket(AF_INET, SOCK_STREAM)
 
-serverPort = 12008
+serverPort = 12001
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
 
@@ -104,7 +105,7 @@ connectionSocket, addr = serverSocket.accept()
 # If the exception type matches the word after except
 # the except clause is executed
 try:
-    print "the server is ready to receive"
+    print "the server is ready to respond"
     # Receives the request message from the client
     message = connectionSocket.recv(1024)
 
@@ -121,16 +122,9 @@ try:
     outputdata = f.read()
 
     print "output: " + outputdata
-
     #Send one HTTP header line into socket
     connectionSocket.send('HTTP/1.1 200 OK\r\n')
-
-    connectionSocket.send('{"emails": [{"mail_from": "fake.email@gmail.com", "message": "t", "rct_to": "fake.email@gmail.com", "ID": 0}]}')
-    #connectionSocket.send(outputdata.encode())
-    #Send the content of the requested file to the client
-    # for i in range(0, len(outputdata)):
-    #     connectionSocket.send(outputdata[i])
-    connectionSocket.close()
+    connectionSocket.send(outputdata)
 
 except IOError:
     #Send response message for file not found

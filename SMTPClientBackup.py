@@ -7,7 +7,7 @@ import ssl
 #https://docs.python.org/3/library/http.client.html 
 
 endmsg = "\r\n.\r\n"
-portnum = 12008
+portnum = 12001
 
 def setup_server():
     # Choose a mail server (e.g. Google mail server) and call it mailserver
@@ -102,21 +102,20 @@ def end_message_sending(secure_sock):
     print recv6
 
 # Pull protocol
-def pull_messages():
-    conn = httplib.HTTPConnection("localhost", portnum) 
+def pull_messages(secure_sock):
+    conn = httplib.HTTPConnection("localhost", portnum)
     conn.request("GET", "/emailstorage.txt") 
     r1 = conn.getresponse()
     conn.close()
     headers = r1.getheaders()
-    data1 = str(headers[0]) #r1.read()
     r1.close()
-    print data1
+    data1 = headers[0][0] + ":" + headers[0][1]
     mail_dict = json.loads(data1)
     for i in mail_dict['emails']: 
-        print(i) #prints emails
-
+        print i # prints emails
+    # have to encode message
     '''
-    input:
+    sample input:
     {
         "emails": [
             {
@@ -159,8 +158,8 @@ def main():
             end_message_sending(sec_sock)
         else:
             send_message(sec_sock, msg)
-    time.sleep(3)
-    pull_messages()
+    time.sleep(1)
+    pull_messages(sec_sock)
     
 if __name__ == "__main__":
     main()
