@@ -7,16 +7,16 @@ import ssl
 #https://docs.python.org/3/library/http.client.html 
 
 endmsg = "\r\n.\r\n"
+portnum = 12008
 
 def setup_server():
     # Choose a mail server (e.g. Google mail server) and call it mailserver
     mailserver = "127.0.0.1"
-    port = 12001
 
     # Create socket called clientSocket and establish a TCP connection with mailserver
     clientSocket = socket(AF_INET, SOCK_STREAM)
     clientSocket.setblocking(1)
-    clientSocket.connect((mailserver, port))
+    clientSocket.connect((mailserver, portnum))
 
     # Establish secure connection using TLS
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
@@ -82,14 +82,14 @@ def prep_data(secure_sock):
 def send_message(secure_sock, msg):
     # Send message data.
     print "send msg"
-    secure_sock.send(msg)
+    secure_sock.send(msg.encode())
     
     # prevent msg + endmsg from being combined into 1 req
     time.sleep(1)
 
     # Message ends with a single period.
     print "send endmsg"
-    secure_sock.send(endmsg)
+    secure_sock.send(endmsg.encode())
     recv5 = secure_sock.recv(1024).decode()
     print recv5
 
@@ -103,14 +103,16 @@ def end_message_sending(secure_sock):
 
 # Pull protocol
 def pull_messages():
-    conn = httplib.HTTPSConnection("localhost", 12001) 
+    conn = httplib.HTTPConnection("localhost", portnum) 
     conn.request("GET", "/emailstorage.txt") 
     r1 = conn.getresponse()
     conn.close()
-    data1 = r1.read()
+    headers = r1.getheaders()
+    data1 = str(headers[0]) #r1.read()
     r1.close()
+    print data1
     mail_dict = json.loads(data1)
-    for i in data1['emails']: 
+    for i in mail_dict['emails']: 
         print(i) #prints emails
 
     '''
@@ -152,11 +154,12 @@ def main():
     sec_sock = setup_server()
     msg = ''
     while msg != 'quit':
-        msg = input("Type your message and hit enter to send. Type 'quit' to send your message and refresh your inbox. ")
+        msg = raw_input("Type your message and hit enter to send. Type 'quit' to send your message and refresh your inbox. ")
         if msg == 'quit':
             end_message_sending(sec_sock)
         else:
             send_message(sec_sock, msg)
+    time.sleep(3)
     pull_messages()
     
 if __name__ == "__main__":

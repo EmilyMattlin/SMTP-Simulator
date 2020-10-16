@@ -6,7 +6,7 @@ import pprint
 # Create a TCP server socket
 serverSocket = socket(AF_INET, SOCK_STREAM)
 
-serverPort = 12001
+serverPort = 12008
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
 
@@ -60,7 +60,7 @@ data = {}
 counter = 0
 
 messages = {}
-server_alive = true
+server_alive = True
 
 while server_alive:
     # receive msg
@@ -78,22 +78,67 @@ while server_alive:
     print("expected endmsg, received: ", end_msg)
     secure_sock.send('250')
 
+# Close the secure socket for SMTP
 secure_sock.close()
 
-
-# save the email into data
+# Save the emails into json files
+emails_list = []
 for key in messages:
-    data[‘emails’] = []
-    data[emails].append({
-        ‘mail_from’: mail_from_addr,
-        ‘rct_to’: rcpt_to_addr,
-        ‘message’ : messages[key],
-        ‘ID’ : key
+    print messages[key]
+    emails_list.append({
+        'mail_from': mail_from_addr,
+        'rct_to': rcpt_to_addr,
+        'message' : messages[key],
+        'ID' : key
     })
-
+data['emails'] = emails_list
 with open('emailstorage.txt', 'w') as outfile:
     json.dump(data, outfile)
-    
+
+# Listen for HTTP GET request from client
+# Set up a new connection from the client
+connectionSocket, addr = serverSocket.accept()
+
+# If an exception occurs during the execution of try clause
+# the rest of the clause is skipped
+# If the exception type matches the word after except
+# the except clause is executed
+try:
+    print "the server is ready to receive"
+    # Receives the request message from the client
+    message = connectionSocket.recv(1024)
+
+    # Extract the path of the requested object from the message
+    # The path is the second part of HTTP header, identified by [1]
+    filename = message.split()[1]
+
+    # Because the extracted path of the HTTP request includes
+    # a character '\', we read the path from the second character
+    f = open(filename[1:])
+
+    print f
+    # Store the entire content of the requested file in a temporary buffer
+    outputdata = f.read()
+
+    print "output: " + outputdata
+
+    #Send one HTTP header line into socket
+    connectionSocket.send('HTTP/1.1 200 OK\r\n')
+
+    connectionSocket.send('{"emails": [{"mail_from": "fake.email@gmail.com", "message": "t", "rct_to": "fake.email@gmail.com", "ID": 0}]}')
+    #connectionSocket.send(outputdata.encode())
+    #Send the content of the requested file to the client
+    # for i in range(0, len(outputdata)):
+    #     connectionSocket.send(outputdata[i])
+    connectionSocket.close()
+
+except IOError:
+    #Send response message for file not found
+    connectionSocket.send('HTTP/1.1 404 Not Found\r\n')
+
+    #Close client socket
+    connectionSocket.close()
+
 # Client's Order of SMTP Operations:
 # HELO
 # MAIL FROM
