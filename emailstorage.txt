@@ -1,1 +1,1 @@
-{"emails": [{"rcpt_to": "fake.email@gmail.com", "mail_from": "fake.email@gmail.com", "message": "messagr", "ID": 0}, {"rcpt_to": "fake.email@gmail.com", "mail_from": "fake.email@gmail.com", "message": "q", "ID": 1}]}
+
