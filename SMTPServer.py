@@ -1,3 +1,5 @@
+# Oct, 2020
+# By Emily Mattlin, Emily Wang, Melissa Guzman, Estrella Garcia
 from socket import *
 import json
 import ssl
@@ -6,7 +8,7 @@ import httplib
 # Create a TCP server socket
 serverSocket = socket(AF_INET, SOCK_STREAM)
 
-serverPort = 12001
+serverPort = 12002
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
 
@@ -95,7 +97,6 @@ for key in messages:
         'message' : messages[key],
         'ID' : key
     })
-
 data = {}
 data['emails'] = emails_list
 with open('emailstorage.txt', 'w') as outfile:
@@ -127,8 +128,9 @@ try:
     outputdata = f.read()
 
     print "output: " + outputdata
-    #Send one HTTP header line into socket
+    # Send one HTTP header line into socket
     connectionSocket.send('HTTP/1.1 200 OK\r\n')
+    # Send data into socket
     connectionSocket.send(outputdata)
 
     connectionSocket.close()
@@ -140,28 +142,3 @@ except IOError:
     connectionSocket.close()
 
 serverSocket.close()
-
-'''
-{
-    "emails": [
-        {
-        "rcpt_to": "EMAIL ADDRESS",
-        "mail_from": "EMAIL ADDRESS",
-        "message": "email contents",
-        "id": "0"
-        },
-        {
-        "rcpt_to": "EMAIL ADDRESS",
-        "mail_from": "EMAIL ADDRESS",
-        "message": "email contents",
-        "id": "1"
-        },
-        {
-        "rcpt_to": "EMAIL ADDRESS",
-        "mail_from": "EMAIL ADDRESS",
-        "message": "email contents",
-        "id": "2"
-        }
-    ]
-}
-'''

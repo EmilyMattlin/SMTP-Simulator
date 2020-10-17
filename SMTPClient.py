@@ -1,13 +1,13 @@
+# Oct, 2020
+# By Emily Mattlin, Emily Wang, Melissa Guzman, Estrella Garcia
 from socket import *
 import time
 import httplib
 import json
 import ssl
 
-#https://docs.python.org/3/library/http.client.html 
-
 endmsg = "\r\n.\r\n"
-portnum = 12001
+portnum = 12002
 
 def setup_server():
     # Local mail server
@@ -110,7 +110,7 @@ def end_message_sending(secure_sock):
     secure_sock.close()
     print recv6
 
-# Pull protocol
+# Pull protocol & display messages
 def pull_messages(secure_sock):
     conn = httplib.HTTPConnection("localhost", portnum)
     conn.request("GET", "/emailstorage.txt") 
@@ -124,10 +124,10 @@ def pull_messages(secure_sock):
         print "Inbox empty"
         return
     for i in mail_dict['emails']:
-        print "email #" + str(i['ID'])
+        print "\r\nemail #" + str(i['ID'])
         print "to: " + i['rcpt_to'] 
         print "from: " + i['mail_from']
-        print "from: " + i['message']  + "\r\n"
+        print "from: " + i['message']
     '''
     sample input:
     {
@@ -155,7 +155,7 @@ def pull_messages(secure_sock):
     '''
 
 '''
-output:
+sample output:
 {'rcpt_to': 'EMAIL ADDRESS', 'mail_from': 'EMAIL ADDRESS', 'message': 'email contents', 'id': '0'}
 {'rcpt_to': 'EMAIL ADDRESS', 'mail_from': 'EMAIL ADDRESS', 'message': 'email contents', 'id': '1'}
 {'rcpt_to': 'EMAIL ADDRESS', 'mail_from': 'EMAIL ADDRESS', 'message': 'email contents', 'id': '2'}
