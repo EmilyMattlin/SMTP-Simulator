@@ -85,10 +85,9 @@ secure_sock.close()
 # Save the emails into json files
 emails_list = []
 for key in messages:
-    print messages[key]
     emails_list.append({
         'mail_from': mail_from_addr,
-        'rct_to': rcpt_to_addr,
+        'rcpt_to': rcpt_to_addr,
         'message' : messages[key],
         'ID' : key
     })
@@ -125,6 +124,8 @@ try:
     #Send one HTTP header line into socket
     connectionSocket.send('HTTP/1.1 200 OK\r\n')
     connectionSocket.send(outputdata)
+
+    connectionSocket.close()
 
 except IOError:
     #Send response message for file not found
