@@ -10,7 +10,7 @@ endmsg = "\r\n.\r\n"
 portnum = 12001
 
 def setup_server():
-    # Choose a mail server (e.g. Google mail server) and call it mailserver
+    # Local mail server
     mailserver = "127.0.0.1"
 
     # Create socket called clientSocket and establish a TCP connection with mailserver
@@ -18,41 +18,49 @@ def setup_server():
     clientSocket.setblocking(1)
     clientSocket.connect((mailserver, portnum))
 
+    recv = clientSocket.recv(1024).decode()
+    print(recv)
+    if recv[:3] != '220':
+        print('220 reply not received from server.')
+
+    # Send EHLO command and print server response.
+    print "send EHLO"
+    ehloCommand = 'EHLO Alice\r\n'
+    clientSocket.send(ehloCommand.encode())
+    recv1 = clientSocket.recv(1024).decode()
+    print(recv1)
+    if recv1[:3] != '250':
+        print('250 reply not received from server.')
+        
+    secure_sock = start_tls(clientSocket)
+    send_mail_from(secure_sock)
+    send_rcpt_to(secure_sock)
+    prep_data(secure_sock)
+    
+    return secure_sock
+
+def start_tls(clientSocket):
+    # send STARTTLS command
+    print "send STARTTLS"
+    startTlsCommand = "STARTTLS"
+    clientSocket.send(startTlsCommand.encode())
+    recv = clientSocket.recv(1024).decode()
+    print recv
+
     # Establish secure connection using TLS
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     context.verify_mode = ssl.CERT_REQUIRED
     context.load_verify_locations('server.pem')
     context.load_cert_chain(certfile="client.pem", keyfile="client.key")
 
-    if ssl.HAS_SNI:
-        secure_sock = context.wrap_socket(clientSocket, server_side=False, server_hostname=mailserver)
-    else:
-        secure_sock = context.wrap_socket(clientSocket, server_side=False)
+    # wrap the existing socket with SSL context to create secure socket
+    secure_sock = context.wrap_socket(clientSocket, server_side=False)
 
     cert = secure_sock.getpeercert()
     print cert
 
-    # verify server
+    # verify expected value in server's certificate
     if not cert or ('organizationName', 'Wellesley') not in cert['subject'][3]: raise Exception("ERROR")
-
-    recv = secure_sock.recv(1024).decode()
-    print(recv)
-    if recv[:3] != '220':
-        print('220 reply not received from server.')
-
-    # Send HELO command and print server response.
-    print "send HELO"
-    heloCommand = 'HELO Alice\r\n'
-    secure_sock.send(heloCommand.encode())
-    recv1 = secure_sock.recv(1024).decode()
-    print(recv1)
-    if recv1[:3] != '250':
-        print('250 reply not received from server.')
-        
-    send_mail_from(secure_sock)
-    send_rcpt_to(secure_sock)
-    prep_data(secure_sock)
-    
     return secure_sock
 
 # Send MAIL FROM command and print server response.
@@ -109,7 +117,6 @@ def pull_messages(secure_sock):
     r1 = conn.getresponse()
     conn.close()
     headers = r1.getheaders()
-    r1.close()
     data1 = headers[0][0] + ":" + headers[0][1]
     mail_dict = json.loads(data1)
     # prints emails
@@ -165,6 +172,7 @@ def main():
             end_message_sending(sec_sock)
         else:
             send_message(sec_sock, msg)
+    # buffer time to allow the server to finish storing the emails
     time.sleep(1)
     pull_messages(sec_sock)
     

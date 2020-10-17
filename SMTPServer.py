@@ -1,7 +1,6 @@
 from socket import *
 import json
 import ssl
-import pprint
 import httplib
 
 # Create a TCP server socket
@@ -13,9 +12,21 @@ serverSocket.listen(1)
 
 print('The server is ready to receive')
 
-
 # Set up a new connection from the client
 connectionSocket, addr = serverSocket.accept()
+
+# send initial response
+connectionSocket.send('220')
+
+# receive EHLO
+ehlo = connectionSocket.recv(1024)
+print("Expected EHLO, received: " + ehlo)
+connectionSocket.send('250')
+
+# receive STARTTLS
+start_tls = connectionSocket.recv(1024)
+print("Expected STARTTLS, received: " + start_tls)
+connectionSocket.send("220")
 
 # Establish secure connection using TLS
 secure_sock = ssl.wrap_socket(connectionSocket, server_side=True, ca_certs = "client.pem", certfile="server.pem", keyfile="server.key", cert_reqs=ssl.CERT_REQUIRED,
@@ -23,32 +34,27 @@ secure_sock = ssl.wrap_socket(connectionSocket, server_side=True, ca_certs = "cl
 
 print repr(secure_sock.getpeername())
 print secure_sock.cipher()
-print pprint.pformat(secure_sock.getpeercert())
+
+# get client certificate
 cert = secure_sock.getpeercert()
 print cert                        
 
-# verify client
-if not cert or ('organizationName', 'Wellesley') not in cert['subject'][3]: raise Exception("ERROR")
-
-secure_sock.send('220')
-# receive HELO
-helo = secure_sock.recv(1024)
-print("Expected HELO, received: " + helo)
-# for now, assume commands are correct
-secure_sock.send('250')
+# verify expected value in client's certificate
+if not cert or ('organizationName', 'Wellesley') not in cert['subject'][3]:
+    raise Exception("ERROR")
 
 # receive MAIL FROM
 mail_from = secure_sock.recv(1024)
 mail_from_addr = mail_from.split("<")[1].split(">")[0]
-print("Expected MAIL FROM, received:" + mail_from)
-print("mail from address: " + mail_from_addr)
+print("Expected MAIL FROM, received: " + mail_from)
+print("MAIL FROM address: " + mail_from_addr)
 secure_sock.send('250')
 
 # receive RCPT TO
 rcpt_to = secure_sock.recv(1024)
 rcpt_to_addr = rcpt_to.split("<")[1].split(">")[0]
-print("Expected RCPT TO, received:" + rcpt_to)
-print("rcpt to address: " + rcpt_to_addr)
+print("Expected RCPT TO, received: " + rcpt_to)
+print("RCPT TO address: " + rcpt_to_addr)
 secure_sock.send('250')
 
 # receive DATA command
@@ -56,15 +62,13 @@ data_command = secure_sock.recv(1024)
 print("expected DATA, received: ", data_command)
 secure_sock.send('250')
 
-# for json file for data storage
-data = {}
-counter = 0
-
+# receive messages
 messages = {}
+counter = 0
 server_alive = True
 
 while server_alive:
-    # receive msg
+    # receive a single msg
     msg = secure_sock.recv(1024)
     if 'QUIT' in msg:
         print("expected QUIT, received: ", quit)
@@ -82,7 +86,7 @@ while server_alive:
 # Close the secure socket for SMTP
 secure_sock.close()
 
-# Save the emails into json files
+# Save the emails into json file
 emails_list = []
 for key in messages:
     emails_list.append({
@@ -91,6 +95,8 @@ for key in messages:
         'message' : messages[key],
         'ID' : key
     })
+
+data = {}
 data['emails'] = emails_list
 with open('emailstorage.txt', 'w') as outfile:
     json.dump(data, outfile)
@@ -130,22 +136,10 @@ try:
 except IOError:
     #Send response message for file not found
     connectionSocket.send('HTTP/1.1 404 Not Found\r\n')
-
-    #Close client socket
+    
     connectionSocket.close()
 
-# Client's Order of SMTP Operations:
-# HELO
-# MAIL FROM
-# RCPT TO
-# DATA
-# msg1
-# end_msg
-# msg2
-# end_msg
-# msg3
-# end_msg
-# QUIT
+serverSocket.close()
 
 '''
 {
